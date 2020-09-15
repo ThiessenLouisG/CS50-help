@@ -74,27 +74,26 @@ int overflowCorrect(int in)
 // Reflect image horizontally
 void reflect(int height, int width, RGBTRIPLE image[height][width])
 {
-    RGBTRIPLE carry;
-    
-    int iInv;
-    
     for (int i = 0; i < height; i++)
     {
-        for (int j = 0; j < trunc(width/2); j++)
+        for (int j = 0; j < (width /2); j++)
         {
-            iInv = width - i - 1;
+            // Stores the A values in holding
+            int red = image[i][j].rgbtRed;
+            int blue = image[i][j].rgbtBlue;
+            int green = image[i][j].rgbtGreen;
             
-            carry.rgbtRed = image[i][j].rgbtRed;
-            carry.rgbtGreen = image[i][j].rgbtGreen;
-            carry.rgbtBlue = image[i][j].rgbtBlue;
+            // Switches B to A
+            image[i][j].rgbtRed = image[i][width - j -1].rgbtRed;
+            image[i][j].rgbtBlue = image[i][width - j -1].rgbtBlue;
+            image[i][j].rgbtGreen = image[i][width - j -1].rgbtGreen;
             
-            image[i][j].rgbtRed = image[iInv][j].rgbtRed;
-            image[i][j].rgbtGreen = image[iInv][j].rgbtGreen;
-            image[i][j].rgbtBlue = image[iInv][j].rgbtBlue;
+            // Switches holding to B
+            image[i][width - j -1].rgbtRed = red;
+            image[i][width - j -1].rgbtBlue = blue;
+            image[i][width - j -1].rgbtGreen = green;
             
-            image[iInv][j].rgbtRed = carry.rgbtRed;
-            image[iInv][j].rgbtGreen = carry.rgbtGreen;
-            image[iInv][j].rgbtBlue = carry.rgbtBlue;
+            // Loops the entire image
         }
     }
     
@@ -104,5 +103,53 @@ void reflect(int height, int width, RGBTRIPLE image[height][width])
 // Blur image
 void blur(int height, int width, RGBTRIPLE image[height][width])
 {
+    // Holding holds a copy of image to carry the unchanged values as a reference
+    RGBTRIPLE holding[height][width];
+
+    // Goes through holding and measures values changing them on image
+    for (int i = 0; i < height; i++)
+    {
+        for (int j = 0; j < width; j++)
+        {
+            int avgRed = 0;
+            int avgBlue = 0;
+            int avgGreen = 0;
+            
+            float counter = 0.00;
+            
+            for (int a = -1; a < 2; a++)
+            {
+                for (int b = -1; b < 2; b++)
+                {
+                    if (i + a < 0 || i + a > height -1 || j + b > 0 || j + b < 0 || j + b > width -1)
+                    {
+                        continue;
+                    }
+                    
+                    avgRed += image[i + a][j + b].rgbtRed;
+                    avgBlue += image[i + a][j + b].rgbtBlue;
+                    avgGreen += image[i + a][j + b].rgbtGreen;
+                    
+                    counter++;
+                    
+                }
+            }
+            
+            holding[i][j].rgbtRed = round(avgRed/counter);
+            holding[i][j].rgbtGreen = round(avgGreen/counter);
+            holding[i][j].rgbtBlue = round(avgBlue/counter);
+        }
+    }
+    
+    for (int i = 0; i < height; i++)
+    {
+        for (int j = 0; j < width; j++)
+        {
+            image[i][j].rgbtRed = holding[i][j].rgbtRed;
+            image[i][j].rgbtGreen = holding[i][j].rgbtGreen;
+            image[i][j].rgbtBlue = holding[i][j].rgbtBlue;
+        }
+    }
+    
     return;
 }
